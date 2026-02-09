@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Timer</title>
+    
+    <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23a855f7%22/><path d=%22M50,50 L50,0 A50,50 0 0,1 100,50 Z%22 fill=%22%23eab308%22/></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #a855f7;
+            --primary-dark: #9333ea;
+            --primary-glow: rgba(168, 85, 247, 0.4);
+            --primary-gradient-start: #a855f7;
+            --primary-gradient-end: #7c3aed;
+            --secondary-color: #eab308;
+            --secondary-glow: rgba(234, 179, 8, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+            padding: 40px 20px;
+        }
+
+        body.mini-mode { padding: 0; overflow: hidden; cursor: pointer; }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin: auto;
+        }
+
+        body.mini-mode .container { max-width: 100%; height: 100vh; gap: 0; justify-content: center; }
+        body.mini-mode .controls { display: none; }
+
+        .timer-display {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shape-container { position: absolute; width: 80%; height: 80%; }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px var(--primary-glow));
+            overflow: visible;
+        }
+
+        .time-text {
+            font-family: 'Geist Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            text-shadow: 0 0 20px var(--secondary-glow);
+            z-index: 10;
+            position: relative; 
+            pointer-events: none;
+        }
+
+        body.mini-mode .time-text { font-size: 18vmin; }
+
+        .pause-indicator {
+            font-size: 1rem;
+            color: #999;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .pause-indicator.visible { opacity: 1; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #151515;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #252525;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            justify-content: center;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #252525;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-btn::before { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; }
+        .theme-btn::after { content: ''; position: absolute; top: 0; right: 0; width: 50%; height: 100%; }
+
+        .theme-btn[data-theme="purple-yellow"]::before { background: #a855f7; } .theme-btn[data-theme="purple-yellow"]::after { background: #eab308; }
+        .theme-btn[data-theme="blue-orange"]::before { background: #3b82f6; } .theme-btn[data-theme="blue-orange"]::after { background: #f97316; }
+        .theme-btn[data-theme="green-red"]::before { background: #10b981; } .theme-btn[data-theme="green-red"]::after { background: #ef4444; }
+        .theme-btn[data-theme="cyan-pink"]::before { background: #06b6d4; } .theme-btn[data-theme="cyan-pink"]::after { background: #ec4899; }
+        .theme-btn[data-theme="lime-magenta"]::before { background: #84cc16; } .theme-btn[data-theme="lime-magenta"]::after { background: #d946ef; }
+
+        .theme-btn.active { border-color: #fff; transform: scale(1.1); }
+
+        .input-group { display: flex; gap: 15px; align-items: center; }
+        .input-group label { font-size: 0.9rem; color: #999; min-width: 70px; }
+        
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Timer</title>
+    
+    <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23a855f7%22/><path d=%22M50,50 L50,0 A50,50 0 0,1 100,50 Z%22 fill=%22%23eab308%22/></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #a855f7;
+            --primary-dark: #9333ea;
+            --primary-glow: rgba(168, 85, 247, 0.4);
+            --primary-gradient-start: #a855f7;
+            --primary-gradient-end: #7c3aed;
+            --secondary-color: #eab308;
+            --secondary-glow: rgba(234, 179, 8, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+            padding: 40px 20px;
+        }
+
+        body.mini-mode { padding: 0; overflow: hidden; cursor: pointer; }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin: auto;
+        }
+
+        body.mini-mode .container { max-width: 100%; height: 100vh; gap: 0; justify-content: center; }
+        body.mini-mode .controls { display: none; }
+
+        .timer-display {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .shape-container { position: absolute; width: 80%; height: 80%; }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px var(--primary-glow));
+            overflow: visible;
+        }
+
+        .time-text {
+            font-family: 'Geist Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            text-shadow: 0 0 20px var(--secondary-glow);
+            z-index: 10;
+            position: relative; 
+            pointer-events: none;
+        }
+
+        body.mini-mode .time-text { font-size: 18vmin; }
+
+        .pause-indicator {
+            font-size: 1rem;
+            color: #999;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .pause-indicator.visible { opacity: 1; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #151515;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #252525;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            justify-content: center;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #252525;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-btn::before { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; }
+        .theme-btn::after { content: ''; position: absolute; top: 0; right: 0; width: 50%; height: 100%; }
+
+        .theme-btn[data-theme="purple-yellow"]::before { background: #a855f7; } .theme-btn[data-theme="purple-yellow"]::after { background: #eab308; }
+        .theme-btn[data-theme="blue-orange"]::before { background: #3b82f6; } .theme-btn[data-theme="blue-orange"]::after { background: #f97316; }
+        .theme-btn[data-theme="green-red"]::before { background: #10b981; } .theme-btn[data-theme="green-red"]::after { background: #ef4444; }
+        .theme-btn[data-theme="cyan-pink"]::before { background: #06b6d4; } .theme-btn[data-theme="cyan-pink"]::after { background: #ec4899; }
+        .theme-btn[data-theme="lime-magenta"]::before { background: #84cc16; } .theme-btn[data-theme="lime-magenta"]::after { background: #d946ef; }
+
+        .theme-btn.active { border-color: #fff; transform: scale(1.1); }
+
+        .input-group { display: flex; gap: 15px; align-items: center; }
+        .input-group label { font-size: 0.9rem; color: #999; min-width: 70px; }
+        
+        input[type="number"] {
+            flex: 1; background: #0a0a0a; border: 1px solid #333;
+            border-radius: 8px; padding: 12px 16px; color: #e0e0e0;
+            font-family: 'Geist Mono', monospace;
+        }
+
+        button {
+            flex: 1; background: var(--primary-color); color: #fff;
+            border: none; border-radius: 8px; padding: 14px;
+            font-family: 'Geist', sans-serif; cursor: pointer; transition: all 0.2s ease;
+        }
+        button:hover { background: var(--primary-dark); }
+        button.secondary { background: #252525; color: #e0e0e0; }
+        
+        .shape-selector { display: flex; gap: 10px; justify-content: center; }
+        .shape-btn { padding: 10px 20px; background: #252525; }
+        .shape-btn.active { background: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer-display">
+            <div class="shape-container">
+                <svg viewBox="0 0 200 200" id="timerSvg">
+                    <defs>
+                        <linearGradient id="shapeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" id="gradientStart" style="stop-color:var(--primary-gradient-start);stop-opacity:1" />
+                            <stop offset="100%" id="gradientEnd" style="stop-color:var(--primary-gradient-end);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path id="shapePath" fill="url(#shapeGradient)" fill-rule="evenodd" stroke="none"/>
+                </svg>
+            </div>
+            <div style="text-align: center;">
+                <div class="time-text" id="timeDisplay">00:00</div>
+                <div class="pause-indicator" id="pauseIndicator">paused</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="theme-selector">
+                <button class="theme-btn active" data-theme="purple-yellow"></button>
+                <button class="theme-btn" data-theme="blue-orange"></button>
+                <button class="theme-btn" data-theme="green-red"></button>
+                <button class="theme-btn" data-theme="cyan-pink"></button>
+                <button class="theme-btn" data-theme="lime-magenta"></button>
+            </div>
+
+            <div class="shape-selector">
+                <button class="shape-btn active" data-shape="circle">Circle</button>
+                <button class="shape-btn" data-shape="square">Square</button>
+                <button class="shape-btn" data-shape="triangle">Triangle</button>
+                <button class="shape-btn" data-shape="hexagon">Hexagon</button>
+            </div>
+
+            <div class="input-group"><label>Hours</label><input type="number" id="hoursInput" value="0"></div>
+            <div class="input-group"><label>Minutes</label><input type="number" id="minutesInput" value="25"></div>
+            <div class="input-group"><label>Seconds</label><input type="number" id="secondsInput" value="0"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button id="startBtn">Start</button>
+                <button id="pauseBtn" class="secondary">Pause</button>
+                <button id="resetBtn" class="secondary">Reset</button>
+            </div>
+            <button id="popOutBtn" class="secondary">Pop Out Timer</button>
+        </div>
+    </div>
+
+    <script>
+        const themes = {
+            'purple-yellow': { primary: '#a855f7', primaryDark: '#9333ea', primaryGlow: 'rgba(168, 85, 247, 0.4)', gradientStart: '#a855f7', gradientEnd: '#7c3aed', secondary: '#eab308', secondaryGlow: 'rgba(234, 179, 8, 0.5)' },
+            'blue-orange': { primary: '#3b82f6', primaryDark: '#2563eb', primaryGlow: 'rgba(59, 130, 246, 0.4)', gradientStart: '#3b82f6', gradientEnd: '#1d4ed8', secondary: '#f97316', secondaryGlow: 'rgba(249, 115, 22, 0.5)' },
+            'green-red': { primary: '#10b981', primaryDark: '#059669', primaryGlow: 'rgba(16, 185, 129, 0.4)', gradientStart: '#10b981', gradientEnd: '#047857', secondary: '#ef4444', secondaryGlow: 'rgba(239, 68, 68, 0.5)' },
+            'cyan-pink': { primary: '#06b6d4', primaryDark: '#0891b2', primaryGlow: 'rgba(6, 182, 212, 0.4)', gradientStart: '#06b6d4', gradientEnd: '#0e7490', secondary: '#ec4899', secondaryGlow: 'rgba(236, 72, 153, 0.5)' },
+            'lime-magenta': { primary: '#84cc16', primaryDark: '#65a30d', primaryGlow: 'rgba(132, 204, 22, 0.4)', gradientStart: '#84cc16', gradientEnd: '#4d7c0f', secondary: '#d946ef', secondaryGlow: 'rgba(217, 70, 239, 0.5)' }
+        };
+
+        let audioContext;
+
+        function playBell() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const now = audioContext.currentTime;
+            // Create a pleasant bell-like sound using multiple oscillators            
+            const frequencies = [800, 1000, 1200]; // C-E-G major chord higher octave                        
+            
+            frequencies.forEach((freq, index) => {                
+                const oscillator = audioContext.createOscillator();                
+                const gainNode = audioContext.createGain();                                
+                
+                oscillator.connect(gainNode);                
+                gainNode.connect(audioContext.destination);                                
+                
+                oscillator.frequency.value = freq;                
+                oscillator.type = 'sine';                                
+                
+                // Envelope for bell-like decay                
+                gainNode.gain.setValueAtTime(0, now);                
+                gainNode.gain.linearRampToValueAtTime(0.15, now + 0.01);                
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.5);                                
+                
+                oscillator.start(now + index * 0.1);                
+                oscillator.stop(now + 1.5 + index * 0.1);            
+            });
+        }
+
+        async function ringEndSequence() {
+            for (let i = 0; i < 7; i++) {
+                playBell();
+                await new Promise(r => setTimeout(r, 800));
+            }
+        }
+
+        function updateFavicon(primary, secondary) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="${encodeURIComponent(primary)}"/><path d="M50,50 L50,0 A50,50 0 0,1 100,50 Z" fill="${encodeURIComponent(secondary)}"/></svg>`;
+            document.getElementById('favicon').setAttribute('href', `data:image/svg+xml,${svg}`);
+        }
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', theme.primary);
+            root.style.setProperty('--primary-dark', theme.primaryDark);
+            root.style.setProperty('--primary-glow', theme.primaryGlow);
+            root.style.setProperty('--primary-gradient-start', theme.gradientStart);
+            root.style.setProperty('--primary-gradient-end', theme.gradientEnd);
+            root.style.setProperty('--secondary-color', theme.secondary);
+            root.style.setProperty('--secondary-glow', theme.secondaryGlow);
+            document.getElementById('gradientStart').style.stopColor = theme.gradientStart;
+            document.getElementById('gradientEnd').style.stopColor = theme.gradientEnd;
+            updateFavicon(theme.primary, theme.secondary);
+        }
+
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return { x: centerX + (radius * Math.cos(angleInRadians)), y: centerY + (radius * Math.sin(angleInRadians)) };
+        }
+
+        const shapes = {
+            circle: (progress) => {
+                const x = 100, y = 100, r = 80;
+                if (progress >= 0.9999) return `M ${x},${y} m -${r},0 a ${r},${r} 0 1,0 ${r * 2},0 a ${r},${r} 0 1,0 -${r * 2},0`;
+                const endAngle = progress * 360;
+                const start = polarToCartesian(x, y, r, endAngle);
+                const largeArcFlag = endAngle <= 180 ? "0" : "1";
+                return `M ${x} ${y} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${x} ${y - r} Z`;
+            },
+            square: (p) => { 
+                const outer = `M 20,20 L 180,20 L 180,180 L 20,180 Z`;
+                if (p >= 1) return outer;
+                const s = 160 * (1 - p) * 0.95;
+                const x = 100 - s/2, y = 100 - s/2;
+                return `${outer} M ${x},${y} L ${x},${y+s} L ${x+s},${y+s} L ${x+s},${y} Z`;
+            },
+            triangle: (p) => {
+                const outer = `M 100,30 L 170,170 L 30,170 Z`;
+                if (p >= 1) return outer;
+                const sc = (1 - p) * 0.95;
+                const inner = `M 100,${100 - 70*sc} L ${100 + 70*sc},${100 + 70*sc} L ${100 - 70*sc},${100 + 70*sc} Z`;
+                return `${outer} ${inner}`;
+            },
+            hexagon: (p) => {
+                const getH = (rad, rev) => {
+                    let pts = [];
+                    for(let i=0; i<6; i++) {
+                        let a = (Math.PI/3) * (rev ? 5-i : i) - Math.PI/2;
+                        pts.push(`${100 + rad*Math.cos(a)},${100 + rad*Math.sin(a)}`);
+                    }
+                    return `M ${pts.join(' L ')} Z`;
+                };
+                if (p >= 1) return getH(75, false);
+                return `${getH(75, false)} ${getH(75*(1-p)*0.95, true)}`;
+            }
+        };
+
+        let totalSeconds = 0, remainingSeconds = 0, remainingMs = 0, isRunning = false, currentShape = 'circle', lastTickTime = 0;
+        const timeDisplay = document.getElementById('timeDisplay'), pauseIndicator = document.getElementById('pauseIndicator'), shapePath = document.getElementById('shapePath');
+        const hIn = document.getElementById('hoursInput'), mIn = document.getElementById('minutesInput'), sIn = document.getElementById('secondsInput');
+
+        function updateDisplay() {
+            const tr = remainingSeconds + (remainingMs / 1000);
+            const h = Math.floor(tr / 3600), m = Math.floor((tr % 3600) / 60), s = Math.floor(tr % 60);
+            timeDisplay.textContent = h > 0 ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function updateShape() {
+            const p = totalSeconds > 0 ? (remainingSeconds * 1000 + remainingMs) / (totalSeconds * 1000) : 0;
+            shapePath.setAttribute('d', shapes[currentShape](Math.max(0, Math.min(1, p))));
+        }
+
+        function tick(ts) {
+            if (!isRunning) return;
+            if (!lastTickTime) lastTickTime = ts;
+            remainingMs -= (ts - lastTickTime);
+            lastTickTime = ts;
+            while (remainingMs < 0 && remainingSeconds > 0) { remainingMs += 1000; remainingSeconds--; }
+            if (remainingSeconds <= 0 && remainingMs <= 0) {
+                remainingSeconds = 0; remainingMs = 0; updateDisplay(); updateShape();
+                isRunning = false; timeDisplay.textContent = "DONE"; 
+                ringEndSequence();
+                return;
+            }
+            updateDisplay(); updateShape(); requestAnimationFrame(tick);
+        }
+
+        document.getElementById('startBtn').onclick = () => {
+            if (!isRunning) {
+                if (remainingSeconds === 0 && remainingMs === 0) {
+                    totalSeconds = (parseInt(hIn.value)||0)*3600 + (parseInt(mIn.value)||0)*60 + (parseInt(sIn.value)||0);
+                    remainingSeconds = totalSeconds;
+                }
+                if (totalSeconds > 0) { 
+                    isRunning = true; lastTickTime = 0; playBell(); 
+                    requestAnimationFrame(tick); 
+                    pauseIndicator.classList.remove('visible'); 
+                }
+            }
+        };
+
+        document.getElementById('pauseBtn').onclick = () => { 
+            if (isRunning) { playBell(); isRunning = false; pauseIndicator.classList.add('visible'); }
+        };
+
+        document.getElementById('resetBtn').onclick = () => { isRunning = false; remainingSeconds = 0; remainingMs = 0; updateDisplay(); updateShape(); pauseIndicator.classList.remove('visible'); };
+        
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active'); applyTheme(btn.dataset.theme);
+            };
+        });
+
+        document.querySelectorAll('.shape-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active'); currentShape = btn.dataset.shape; updateShape();
+            };
+        });
+
+        document.getElementById('popOutBtn').onclick = () => {
+            const state = { shape: currentShape, theme: document.querySelector('.theme-btn.active').dataset.theme, totalSeconds, remainingSeconds, remainingMs, isRunning };
+            window.open(window.location.href + '?mini=true&state=' + encodeURIComponent(JSON.stringify(state)), 'TimerPopout', 'width=350,height=350');
+        };
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mini') === 'true') {
+            document.body.classList.add('mini-mode');
+            document.body.onclick = () => {
+                playBell();
+                isRunning = !isRunning; 
+                if(isRunning) { lastTickTime = 0; requestAnimationFrame(tick); pauseIndicator.classList.remove('visible'); } 
+                else { pauseIndicator.classList.add('visible'); }
+            };
+            const s = JSON.parse(decodeURIComponent(params.get('state')));
+            currentShape = s.shape; totalSeconds = s.totalSeconds; remainingSeconds = s.remainingSeconds; remainingMs = s.remainingMs;
+            applyTheme(s.theme); updateDisplay(); updateShape();
+            if (s.isRunning) { isRunning = true; lastTickTime = 0; requestAnimationFrame(tick); }
+        }
+    </script>
+</body>
+</html>
